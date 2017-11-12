@@ -1,15 +1,20 @@
 cmake_minimum_required(VERSION 3.8)
 project(io2)
 
-set(CMAKE_CXX_STANDARD 14)
+if (CMAKE_CXX_COMPILE_FEATURES MATCHES cxx_std_17)
+    set(CMAKE_CXX_STANDARD 17)
+else()
+    set(CMAKE_CXX_STANDARD 14)
+    #set(Boost_USE_STATIC_LIBS   ON)
+    find_package(Boost REQUIRED)
+    find_package(Boost COMPONENTS filesystem REQUIRED)
+endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 find_package(LuaJit)
-#set(Boost_USE_STATIC_LIBS   ON)
-#find_package(Boost REQUIRED)
-#find_package(Boost COMPONENTS filesystem REQUIRED)
+
 
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
@@ -30,6 +35,10 @@ generate_export_header(io2)
 set_target_properties(io2 PROPERTIES PREFIX "")
 
 target_link_libraries(io2 ${LuaJit_LIBRARY} ${Boost_LIBRARIES})
+
+if (UNIX AND CMAKE_CXX_COMPILE_FEATURES MATCHES cxx_std_17)
+    target_link_libraries(io2 stdc++fs)
+endif()
 
 add_custom_target(BasicTest
         DEPENDS io2

@@ -2,11 +2,20 @@
 #include <string>
 #include <stdexcept>
 #include <fstream>
+#include <cmath>
 
 #define SOL_CHECK_ARGUMENTS 1
 
 #include <sol.hpp>
 #include "library.h"
+
+#if __cplusplus == 201703L
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#else
+#include <boost/filesystem.hpp>
+namespace fs = boost::filesystem;
+#endif
 
 using namespace std;
 
@@ -190,6 +199,119 @@ namespace io2
         fstream stream;
     };
 
+    sol::table fs(sol::state_view lua)
+    {
+        sol::table module = lua.create_table();
+
+        module.set_function("mkdir", [](const mystring &dir) {
+            fs::create_directory(dir);
+        });
+
+        module.set_function("rm", [](const mystring &path) {
+            fs::remove(path);
+        });
+
+        module.set_function("rmall", [](const mystring &path) {
+            fs::remove_all(path);
+        });
+
+        module.set_function("chdir", [](const mystring &path) {
+            fs::current_path(path);
+        });
+
+        module.set_function("currentdir", [](){
+            return fs::current_path().c_str();
+        });
+
+        module.set_function("dir", [](sol::optional<mystring> maybePath, sol::this_state L) -> sol::object {
+            fs::path path;
+            if(maybePath)
+                path = maybePath.value();
+            else
+                path = fs::current_path();
+
+            sol::state_view lua(L);
+            auto it= make_shared<fs::directory_iterator>(path);
+            return sol::object(lua, sol::in_place, [path, it](sol::this_state _L) -> sol::object {
+                sol::state_view _lua(_L);
+                static fs::directory_iterator endIt;
+
+                if((*it.get()) == endIt)
+                    return sol::object(_lua, sol::in_place, sol::nil);
+                string str = (*it)->path().stem().string();
+                ++(*it);
+                return sol::object(_lua, sol::in_place, str);
+            });
+        });
+
+        module.set_function("isdir", [](const mystring & pathStr) {
+            return fs::is_directory(pathStr);
+        });
+
+        module.set_function("permissions", [](const mystring & pathStr, sol::optional<sol::object> maybePerm) {
+            auto getPermsOfFile = [](const mystring & file) {
+                fs::perms p = fs::status(file).permissions();
+                stringstream sstr;
+                sstr << ((p & fs::perms::owner_read) != fs::perms::none ? "r" : "-")
+                          << ((p & fs::perms::owner_write) != fs::perms::none ? "w" : "-")
+                          << ((p & fs::perms::owner_exec) != fs::perms::none ? "x" : "-")
+                          << ((p & fs::perms::group_read) != fs::perms::none ? "r" : "-")
+                          << ((p & fs::perms::group_write) != fs::perms::none ? "w" : "-")
+                          << ((p & fs::perms::group_exec) != fs::perms::none ? "x" : "-")
+                          << ((p & fs::perms::others_read) != fs::perms::none ? "r" : "-")
+                          << ((p & fs::perms::others_write) != fs::perms::none ? "w" : "-")
+                          << ((p & fs::perms::others_exec) != fs::perms::none ? "x" : "-");
+                return sstr.str();
+            };
+
+            auto getPerms = [](string perms) {
+                if(perms.size() != 9)
+                    throw invalid_argument("io2.fs.permissions(): incorrect permissions");
+                fs::perms p = fs::perms::none;
+                p |= perms[0] == 'r' ?  fs::perms::owner_read : fs::perms::none;
+                p |= perms[1] == 'w' ?  fs::perms::owner_write : fs::perms::none;
+                p |= perms[2] == 'x' ?  fs::perms::owner_exec : fs::perms::none;
+                p |= perms[3] == 'r' ?  fs::perms::group_read : fs::perms::none;
+                p |= perms[4] == 'w' ?  fs::perms::group_write : fs::perms::none;
+                p |= perms[5] == 'x' ?  fs::perms::group_exec : fs::perms::none;
+                p |= perms[6] == 'r' ?  fs::perms::others_read : fs::perms::none;
+                p |= perms[7] == 'w' ?  fs::perms::others_write : fs::perms::none;
+                p |= perms[8] == 'x' ?  fs::perms::others_exec : fs::perms::none;
+                return p;
+            };
+
+            if(maybePerm)
+            {
+                sol::object obj = maybePerm.value();
+                if(obj.is<unsigned>())
+                {
+                    unsigned val = obj.as<unsigned>();
+
+                    auto octToDec = [](unsigned octal) {
+                        int remainder, decimal = 0;
+                        for (int i = 0; octal != 0; ++i)
+                        {
+                            remainder = octal % 10;
+                            octal /= 10;
+                            decimal += remainder * pow(8, i);
+                        }
+                        return decimal;
+                    };
+
+                    fs::permissions(pathStr, (fs::perms) octToDec(val));
+                }
+                else if(obj.is<string>())
+                    fs::permissions(pathStr, getPerms(obj.as<string>()));
+                else
+                    throw invalid_argument("io2.fs.permissions(): incorrect type of permissions");
+            }
+
+            return getPermsOfFile(pathStr);
+        });
+
+        return module;
+    }
+
     sol::table io2(sol::this_state L)
     {
         sol::state_view lua(L);
@@ -219,6 +341,8 @@ namespace io2
         module.set_function("close", [](shared_ptr<io> io) {
             io->close();
         });
+
+        module["fs"] = fs(lua);
 
         return module;
     }

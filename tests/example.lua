@@ -32,3 +32,8 @@ stream:write("size=")
 local size = stream:size()
 stream:write(size + #tostring(size))
 stream:close()
+
+print("---------------------------------")
+for file in io2.fs.dir() do
+    print(io2.fs.permissions(file) .. " " .. file)
+end

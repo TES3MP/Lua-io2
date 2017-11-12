@@ -238,7 +238,7 @@ namespace io2
 
                 if((*it.get()) == endIt)
                     return sol::object(_lua, sol::in_place, sol::nil);
-                string str = (*it)->path().stem().string();
+                string str = (*it)->path().filename().string();
                 ++(*it);
                 return sol::object(_lua, sol::in_place, str);
             });

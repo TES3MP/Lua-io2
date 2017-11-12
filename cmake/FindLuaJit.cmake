@@ -12,7 +12,5 @@ libfind_pkg_detect(LuaJit luajit
 
 libfind_process(LuaJit)
 
-message(STATUS "LuaJit ASDASD ${LuaJit_LIBRARIES}")
-
 set(LUA_LIBRARY ${LuaJit_LIBRARY})
 set(LUA_INCLUDE_DIR ${LuaJit_INCLUDE_DIR})

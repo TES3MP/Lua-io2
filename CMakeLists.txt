@@ -7,7 +7,7 @@ else()
     set(CMAKE_CXX_STANDARD 14)
     #set(Boost_USE_STATIC_LIBS   ON)
     find_package(Boost REQUIRED)
-    find_package(Boost COMPONENTS filesystem REQUIRED)
+    find_package(Boost COMPONENTS system filesystem REQUIRED)
 endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/)

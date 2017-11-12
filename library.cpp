@@ -9,7 +9,7 @@
 #include <sol.hpp>
 #include "library.h"
 
-#if __cplusplus == 201703L
+#if HAVE_FILESYSTEM
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
 #else

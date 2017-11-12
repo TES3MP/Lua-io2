@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 3.8)
 project(io2)
 
-if (CMAKE_CXX_COMPILE_FEATURES MATCHES cxx_std_17)
+include(CheckIncludeFileCXX)
+check_include_file_cxx ("experimental/filesystem" HAVE_FILESYSTEM_H)
+
+if (CMAKE_CXX_COMPILE_FEATURES MATCHES cxx_std_17 AND HAVE_FILESYSTEM_H)
     set(CMAKE_CXX_STANDARD 17)
+    add_definitions(-DHAVE_FILESYSTEM)
 else()
     set(CMAKE_CXX_STANDARD 14)
     #set(Boost_USE_STATIC_LIBS   ON)

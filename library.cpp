@@ -27,13 +27,13 @@ namespace io2
 #endif
     }
 
-    class myFS
+    class io
     {
     public:
 
-        explicit myFS(const mystring &file) : myFS(file, "r") {}
+        explicit io(const mystring &file) : io(file, "r") {}
 
-        explicit myFS(const mystring &file, const string &_mode) //should be [rwa][+]?[b]?
+        explicit io(const mystring &file, const string &_mode) //should be [rwa][+]?[b]?
         {
             ios_base::openmode mode = ios_base::in;
             if (_mode[0] == 'w') // Truncate file to zero length or create text file for writing
@@ -194,29 +194,29 @@ namespace io2
     {
         sol::state_view lua(L);
         sol::table module = lua.create_table();
-        module.new_usertype<myFS>("file",
-                                  "close", &myFS::close,
-                                  "size", &myFS::size,
-                                  "seek", &myFS::seek,
-                                  "pos", &myFS::pos,
-                                  "readnumber", &myFS::readnumber,
-                                  "readline", &myFS::readline,
-                                  "readbytes", &myFS::readbytes,
-                                  "read", &myFS::read,
-                                  "write", &myFS::write,
-                                  "writeln", &myFS::writeln,
-                                  "lines", &myFS::lines,
-                                  "writebyte", &myFS::writebyte
+        module.new_usertype<io>("file",
+                                "close", &io::close,
+                                "size", &io::size,
+                                "seek", &io::seek,
+                                "pos", &io::pos,
+                                "readnumber", &io::readnumber,
+                                "readline", &io::readline,
+                                "readbytes", &io::readbytes,
+                                "read", &io::read,
+                                "write", &io::write,
+                                "writeln", &io::writeln,
+                                "lines", &io::lines,
+                                "writebyte", &io::writebyte
         );
 
         module.set_function("open", [](const mystring &file, sol::object mode) {
             if(mode.valid() && mode.is<string>())
-                return make_shared<myFS>(file, mode.as<string>());
+                return make_shared<io>(file, mode.as<string>());
             else
-                return make_shared<myFS>(file);
+                return make_shared<io>(file);
         });
 
-        module.set_function("close", [](shared_ptr<myFS> io) {
+        module.set_function("close", [](shared_ptr<io> io) {
             io->close();
         });
 

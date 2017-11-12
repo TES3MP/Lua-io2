@@ -35,5 +35,5 @@ stream:close()
 
 print("---------------------------------")
 for file in io2.fs.dir() do
-    print(io2.fs.permissions(file) .. " " .. file)
+    print(io2.fs.permissions(file) .. " \"" .. file .. "\" isdir: " .. (io2.fs.isdir(file) and 'yes' or 'no'))
 end

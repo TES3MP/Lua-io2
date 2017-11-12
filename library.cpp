@@ -7,6 +7,7 @@
 #define SOL_CHECK_ARGUMENTS 1
 
 #include <sol.hpp>
+#include "myperms.hpp"
 #include "library.h"
 
 #if HAVE_FILESYSTEM
@@ -250,34 +251,34 @@ namespace io2
 
         module.set_function("permissions", [](const mystring & pathStr, sol::optional<sol::object> maybePerm) {
             auto getPermsOfFile = [](const mystring & file) {
-                fs::perms p = fs::status(file).permissions();
+                myfs::perms p = (myfs::perms) fs::status(file).permissions();
                 stringstream sstr;
-                sstr << ((p & fs::perms::owner_read) != fs::perms::none ? "r" : "-")
-                          << ((p & fs::perms::owner_write) != fs::perms::none ? "w" : "-")
-                          << ((p & fs::perms::owner_exec) != fs::perms::none ? "x" : "-")
-                          << ((p & fs::perms::group_read) != fs::perms::none ? "r" : "-")
-                          << ((p & fs::perms::group_write) != fs::perms::none ? "w" : "-")
-                          << ((p & fs::perms::group_exec) != fs::perms::none ? "x" : "-")
-                          << ((p & fs::perms::others_read) != fs::perms::none ? "r" : "-")
-                          << ((p & fs::perms::others_write) != fs::perms::none ? "w" : "-")
-                          << ((p & fs::perms::others_exec) != fs::perms::none ? "x" : "-");
+                sstr << ((p & myfs::perms::owner_read) != myfs::perms::none ? "r" : "-")
+                          << ((p & myfs::perms::owner_write) != myfs::perms::none ? "w" : "-")
+                          << ((p & myfs::perms::owner_exec) != myfs::perms::none ? "x" : "-")
+                          << ((p & myfs::perms::group_read) != myfs::perms::none ? "r" : "-")
+                          << ((p & myfs::perms::group_write) != myfs::perms::none ? "w" : "-")
+                          << ((p & myfs::perms::group_exec) != myfs::perms::none ? "x" : "-")
+                          << ((p & myfs::perms::others_read) != myfs::perms::none ? "r" : "-")
+                          << ((p & myfs::perms::others_write) != myfs::perms::none ? "w" : "-")
+                          << ((p & myfs::perms::others_exec) != myfs::perms::none ? "x" : "-");
                 return sstr.str();
             };
 
             auto getPerms = [](string perms) {
                 if(perms.size() != 9)
                     throw invalid_argument("io2.fs.permissions(): incorrect permissions");
-                fs::perms p = fs::perms::none;
-                p |= perms[0] == 'r' ?  fs::perms::owner_read : fs::perms::none;
-                p |= perms[1] == 'w' ?  fs::perms::owner_write : fs::perms::none;
-                p |= perms[2] == 'x' ?  fs::perms::owner_exec : fs::perms::none;
-                p |= perms[3] == 'r' ?  fs::perms::group_read : fs::perms::none;
-                p |= perms[4] == 'w' ?  fs::perms::group_write : fs::perms::none;
-                p |= perms[5] == 'x' ?  fs::perms::group_exec : fs::perms::none;
-                p |= perms[6] == 'r' ?  fs::perms::others_read : fs::perms::none;
-                p |= perms[7] == 'w' ?  fs::perms::others_write : fs::perms::none;
-                p |= perms[8] == 'x' ?  fs::perms::others_exec : fs::perms::none;
-                return p;
+                myfs::perms p = myfs::perms::none;
+                p |= perms[0] == 'r' ?  myfs::perms::owner_read : myfs::perms::none;
+                p |= perms[1] == 'w' ?  myfs::perms::owner_write : myfs::perms::none;
+                p |= perms[2] == 'x' ?  myfs::perms::owner_exec : myfs::perms::none;
+                p |= perms[3] == 'r' ?  myfs::perms::group_read : myfs::perms::none;
+                p |= perms[4] == 'w' ?  myfs::perms::group_write : myfs::perms::none;
+                p |= perms[5] == 'x' ?  myfs::perms::group_exec : myfs::perms::none;
+                p |= perms[6] == 'r' ?  myfs::perms::others_read : myfs::perms::none;
+                p |= perms[7] == 'w' ?  myfs::perms::others_write : myfs::perms::none;
+                p |= perms[8] == 'x' ?  myfs::perms::others_exec : myfs::perms::none;
+                return (fs::perms) p;
             };
 
             if(maybePerm)

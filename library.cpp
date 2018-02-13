@@ -33,7 +33,7 @@ namespace io2
 #ifndef _WIN32
         return str;
 #else
-        return wstring_convert<codecvt_utf8<mystring::value_type>, mystring::value_type>().to_bytes(str);
+        return wstring_convert<codecvt_utf8_utf16<mystring::value_type>, mystring::value_type>().to_bytes(str);
 #endif
     }
 
@@ -164,7 +164,7 @@ namespace io2
                 else if(var.is<lua_Number>())
                     stream << var.as<lua_Number>();
                 else
-                    throw invalid_argument("io2.file:write(): Unsupported type.");
+                    cerr << "io2.file:write(): Unsupported type." << endl;
             }
         }
 
@@ -266,9 +266,13 @@ namespace io2
             };
 
             auto getPerms = [](string perms) {
-                if(perms.size() != 9)
-                    throw invalid_argument("io2.fs.permissions(): incorrect permissions");
                 myfs::perms p = myfs::perms::none;
+                if(perms.size() != 9)
+                {
+                    cerr << "io2.fs.permissions(): incorrect permissions" << endl;
+                    return (fs::perms) p;
+                }
+
                 p |= perms[0] == 'r' ?  myfs::perms::owner_read : myfs::perms::none;
                 p |= perms[1] == 'w' ?  myfs::perms::owner_write : myfs::perms::none;
                 p |= perms[2] == 'x' ?  myfs::perms::owner_exec : myfs::perms::none;
@@ -294,7 +298,7 @@ namespace io2
                         {
                             remainder = octal % 10;
                             octal /= 10;
-                            decimal += remainder * pow(8, i);
+                            decimal += remainder * (int) pow(8, i);
                         }
                         return decimal;
                     };
@@ -304,7 +308,10 @@ namespace io2
                 else if(obj.is<string>())
                     fs::permissions(pathStr, getPerms(obj.as<string>()));
                 else
-                    throw invalid_argument("io2.fs.permissions(): incorrect type of permissions");
+                {
+                    cerr << "io2.fs.permissions(): incorrect type of permissions" << endl;
+                    return string();
+                }
             }
 
             return getPermsOfFile(pathStr);
@@ -332,11 +339,28 @@ namespace io2
                                 "writebyte", &io::writebyte
         );
 
-        module.set_function("open", [](const mystring &file, sol::object mode) {
-            if(mode.valid() && mode.is<string>())
-                return make_shared<io>(file, mode.as<string>());
-            else
-                return make_shared<io>(file);
+        module.set_function("open", [](const string &file, sol::object mode, sol::this_state L) ->sol::object {
+            try
+            {
+                mystring tmp;
+#ifdef _WIN32
+                tmp = wstring_convert<codecvt_utf8_utf16<wchar_t>, wchar_t>().from_bytes(file);
+#else
+                tmp = file;
+#endif
+                shared_ptr<io> ioPtr;
+                if (mode.valid() && mode.is<string>())
+                    ioPtr = make_shared<io>(tmp, mode.as<string>());
+                else
+                    ioPtr = make_shared<io>(tmp);
+
+                return sol::make_object(sol::state_view(L), ioPtr);
+            }
+            catch (exception &e)
+            {
+                cerr << "io2.open(): " << e.what() << endl;
+                return sol::make_object(sol::state_view(L), sol::nil);
+            }
         });
 
         module.set_function("close", [](shared_ptr<io> io) {

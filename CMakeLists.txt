@@ -40,7 +40,7 @@ set_target_properties(io2 PROPERTIES PREFIX "")
 
 target_link_libraries(io2 ${LuaJit_LIBRARY} ${Boost_LIBRARIES})
 
-if (UNIX AND CMAKE_CXX_COMPILE_FEATURES MATCHES cxx_std_17)
+if (NOT MSVC AND CMAKE_CXX_COMPILE_FEATURES MATCHES cxx_std_17)
     target_link_libraries(io2 stdc++fs)
 endif()
 

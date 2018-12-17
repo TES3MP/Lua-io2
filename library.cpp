@@ -110,7 +110,7 @@ namespace io2
                 if (arg.is<string>())
                 {
                     string str = arg.as<string>();
-                    if (str == "*a")
+                    if (str == "*all" || str == "*a")
                     {
                         auto _size = static_cast<size_t>(size());
                         string _str(readbytes(_size), 0, _size + 1);

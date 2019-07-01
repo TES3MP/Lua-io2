@@ -105,7 +105,7 @@ namespace io2
         {
             sol::state_view lua(s);
             sol::variadic_results vares;
-            for(auto &&arg : va)
+            for (auto &&arg : va)
             {
                 if (arg.is<string>())
                 {
@@ -125,7 +125,7 @@ namespace io2
                 {
                     auto n = arg.as<lua_Integer>();
                     string str(readbytes(n), 0, n + 1);
-                    if(stream.eof())
+                    if (stream.eof())
                         vares.push_back({lua, sol::in_place, sol::nil});
                     vares.push_back({lua, sol::in_place, str});
                 }
@@ -147,7 +147,7 @@ namespace io2
                 sol::state_view _lua(_s);
                 string line;
                 getline(stream, line);
-                if(line.empty())
+                if (line.empty())
                     return sol::make_reference(_lua, sol::nil);
                 return sol::make_reference(_lua, line);
             });
@@ -155,13 +155,13 @@ namespace io2
 
         void write(sol::variadic_args va)
         {
-            for(auto &&var : va)
+            for (auto &&var : va)
             {
-                if(var.is<string>())
+                if (var.is<string>())
                     stream << var.as<string>();
-                else if(var.is<lua_Integer>())
+                else if (var.is<lua_Integer>())
                     stream << var.as<lua_Integer>();
-                else if(var.is<lua_Number>())
+                else if (var.is<lua_Number>())
                     stream << var.as<lua_Number>();
                 else
                     cerr << "io2.file:write(): Unsupported type." << endl;
@@ -226,7 +226,7 @@ namespace io2
 
         module.set_function("dir", [](sol::optional<mystring> maybePath, sol::this_state L) -> sol::object {
             fs::path path;
-            if(maybePath)
+            if (maybePath)
                 path = maybePath.value();
             else
                 path = fs::current_path();
@@ -237,7 +237,7 @@ namespace io2
                 sol::state_view _lua(_L);
                 static fs::directory_iterator endIt;
 
-                if((*it.get()) == endIt)
+                if ((*it.get()) == endIt)
                     return sol::object(_lua, sol::in_place, sol::nil);
                 string str = (*it)->path().filename().string();
                 ++(*it);
@@ -267,7 +267,7 @@ namespace io2
 
             auto getPerms = [](string perms) {
                 myfs::perms p = myfs::perms::none;
-                if(perms.size() != 9)
+                if (perms.size() != 9)
                 {
                     cerr << "io2.fs.permissions(): incorrect permissions" << endl;
                     return (fs::perms) p;
@@ -285,10 +285,10 @@ namespace io2
                 return (fs::perms) p;
             };
 
-            if(maybePerm)
+            if (maybePerm)
             {
                 sol::object obj = maybePerm.value();
-                if(obj.is<unsigned>())
+                if (obj.is<unsigned>())
                 {
                     unsigned val = obj.as<unsigned>();
 
@@ -305,7 +305,7 @@ namespace io2
 
                     fs::permissions(pathStr, (fs::perms) octToDec(val));
                 }
-                else if(obj.is<string>())
+                else if (obj.is<string>())
                     fs::permissions(pathStr, getPerms(obj.as<string>()));
                 else
                 {

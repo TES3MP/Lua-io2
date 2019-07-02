@@ -113,7 +113,7 @@ namespace io2
                     if (str == "*all" || str == "*a")
                     {
                         auto _size = static_cast<size_t>(size());
-                        string _str(readbytes(_size), 0, _size + 1);
+                        string _str(readbytes(_size), 0, _size);
                         vares.push_back({lua, sol::in_place, _str});
                     }
                     else if (str == "*l")
@@ -124,7 +124,7 @@ namespace io2
                 else if (arg.is<lua_Integer>())
                 {
                     auto n = arg.as<lua_Integer>();
-                    string str(readbytes(n), 0, n + 1);
+                    string str(readbytes(n), 0, n);
                     if (stream.eof())
                         vares.push_back({lua, sol::in_place, sol::nil});
                     vares.push_back({lua, sol::in_place, str});
